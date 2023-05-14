@@ -89,7 +89,7 @@ def prepare_searchwords(search_words: list = None, wordlist: list = None, remove
 
     return final_wordlist
 
-def prepare_cookies(cookies) -> dict:
+def prepare_cookies(cookies : list) -> dict:
     final_cookies = {}
 
     if cookies is None:
@@ -209,9 +209,10 @@ def run(search_words):
                 ret = session.get(url, verify=args.ssl, cookies=cookies, allow_redirects=args.redirect, headers=headers, timeout=args.timeout)
             except:
                 print(f'[!] {url} not reached')
+                scanned.add(url)
                 continue
             scanned.add(url)
-            
+
             if ret.ok:
                 soup = bs(ret.text, 'html.parser')
                 comments = soup.find_all(string=lambda text: isinstance(text, Comment))
@@ -303,29 +304,36 @@ def main():
 parser = argparse.ArgumentParser(prog='chunt', description="Spider through your targeted domain and fetch all comments developer left. Especially sensitive ones. Those are defined by search words. CHunt already brings the basic ones, but keeps it open to you in the end.", epilog="CHunt only spiders within the same domain.")
 
 parser.add_argument('-t', '--target', type=str, help="Target URL/domain", required=False)
-parser.add_argument('-v', '--version', help="Version of CHunt", required=False, action='store_true')
-parser.add_argument('--ssl', help="Verify SSL (default False)", required=False, action='store_true')
-parser.add_argument('-d', '--depth', type=int, help="Max spider depth (default 1)", default=1, required=False)
-parser.add_argument('-H', '--header', type=str, help='Header infos, usage: -H "Accept:*/*" -H "Accept-Encoding:gzip, deflate"', required=False, nargs='+', action='append')
-parser.add_argument('--user-agent', type=str, help="Define own user-agent", required=False)
-parser.add_argument('--referrer', type=str, help="Define referrer", required=False)
-parser.add_argument('-c', '--cookie', type=str, help="Add own cookie[s], name=value; name2=value2", required=False, nargs='*', action='append')
-parser.add_argument('--proxy-host', type=str, help="Proxy address/host", required=False)
-parser.add_argument('--proxy-port', type=int, help="Proxy port (default 8080)", default=8080, required=False)
-parser.add_argument('--proxy-user', type=str, help="Proxy username", required=False)
-parser.add_argument('--proxy-password', type=str, help="Proxy password", required=False)
-parser.add_argument('-a', '--auth', type=str, help="Authentication method [digest, basic]", required=False, choices=['basic', 'digest'])
-parser.add_argument('-u', '--user', type=str, help="Authentication user", required=False)
-parser.add_argument('-p', '--password', type=str, help="Authentication password", required=False)
-parser.add_argument('--show-urls', help="Show overview of all crawled urls (default False)", required=False, action='store_true')
-parser.add_argument('--show-all-comments', help="Show overview of all crawled comments (default False)", required=False, action='store_true')
-parser.add_argument('-r', '--redirect', help="Follow redirects (default: False)", required=False, action='store_true')
 parser.add_argument('-s', '--search-word', type=str, help="Add own search word[s]", required=False, nargs='*', action='append')
 parser.add_argument('--wordlist', type=str, help="Wordlist with search words", required=False)
 parser.add_argument('-rm', '--remove-searchword',type=str, help="Remove a default searchword", required=False, nargs='*', action='append')
 parser.add_argument('--show-searchwords', help="Prints out used searchwords (default: False)", required=False, action='store_true')
-parser.add_argument('--sleep', type=int, help="Sleep between crawling new found urls (default 0)", default=0, required=False)
+
+parser.add_argument('-d', '--depth', type=int, help="Max spider depth (default 1)", default=1, required=False)
+
+parser.add_argument('--show-urls', help="Show overview of all crawled urls (default False)", required=False, action='store_true')
+parser.add_argument('--show-all-comments', help="Show overview of all crawled comments (default False)", required=False, action='store_true')
+
+parser.add_argument('--ssl', help="Verify SSL (default False)", required=False, action='store_true')
+parser.add_argument('-r', '--redirect', help="Follow redirects (default: False)", required=False, action='store_true')
 parser.add_argument('--timeout', type=int, help="Timeout in seconds for HTTP requests (default 10s)", default=10, required=False)
+
+parser.add_argument('-H', '--header', type=str, help='Header infos, usage: -H "Accept:*/*" -H "Accept-Encoding:gzip, deflate"', required=False, nargs='+', action='append')
+parser.add_argument('--user-agent', type=str, help="Define own user-agent", required=False)
+parser.add_argument('--referrer', type=str, help="Define referrer", required=False)
+parser.add_argument('-c', '--cookie', type=str, help="Add own cookie[s], name=value; name2=value2", required=False, nargs='*', action='append')
+
+parser.add_argument('--proxy-host', type=str, help="Proxy address/host", required=False)
+parser.add_argument('--proxy-port', type=int, help="Proxy port (default 8080)", default=8080, required=False)
+parser.add_argument('--proxy-user', type=str, help="Proxy username", required=False)
+parser.add_argument('--proxy-password', type=str, help="Proxy password", required=False)
+
+parser.add_argument('-a', '--auth', type=str, help="Authentication method [digest, basic]", required=False, choices=['basic', 'digest'])
+parser.add_argument('-u', '--user', type=str, help="Authentication user", required=False)
+parser.add_argument('-p', '--password', type=str, help="Authentication password", required=False)
+
+parser.add_argument('--sleep', type=int, help="Sleep between crawling new found urls (default 0)", default=0, required=False)
+parser.add_argument('-v', '--version', help="Version of CHunt", required=False, action='store_true')
 
 args = parser.parse_args()
 
