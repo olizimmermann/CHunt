@@ -1,16 +1,18 @@
 import argparse
+import os
 import pathlib
+import sys
 import urllib.parse
 import warnings
-import os,sys
 from datetime import datetime
+from time import sleep
+from urllib.parse import urlparse
 
 import requests
-from requests.auth import HTTPDigestAuth, HTTPBasicAuth
 import urllib3
-from urllib.parse import urlparse
 from bs4 import BeautifulSoup as bs
 from bs4 import Comment, XMLParsedAsHTMLWarning
+from requests.auth import HTTPBasicAuth, HTTPDigestAuth
 
 warnings.filterwarnings("ignore", category=XMLParsedAsHTMLWarning, module='bs4')
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
@@ -203,7 +205,7 @@ def run(search_words):
     for cur_depth in range(args.depth):
         for url in targets.difference(scanned):
             print(f'[+] Crawling {url}')
-            ret = session.get(url, verify=args.ssl, cookies=cookies, allow_redirects=args.redirect, headers=headers)
+            ret = session.get(url, verify=args.ssl, cookies=cookies, allow_redirects=args.redirect, headers=headers, timeout=args.timeout)
             scanned.add(url)
             
             if ret.ok:
@@ -229,6 +231,8 @@ def run(search_words):
 
             else:
                 print(f'[!] HTTP code {ret.status_code} for {url}')
+            if args.sleep is not None:
+                sleep(args.sleep)
     
     line()
     print('[+] Result:')
@@ -254,7 +258,7 @@ def run(search_words):
             print('[+] URL: {}'.format(sc['url']))
             print('[+] Comment: {}'.format(sc['comment']))
             line()
-    if args.show_all_comments:
+    if args.show_all_comments and len(all_comments) > 0:
         line()
         print(f'[+] All comments ({len(all_comments)}):')
         for ac in all_comments:
@@ -262,8 +266,6 @@ def run(search_words):
             print('[+] URL: {}'.format(ac['url']))
             print('[+] Comment: {}'.format(ac['comment']))
             line()
-
-
 
 def main():
 
@@ -288,22 +290,6 @@ def main():
     search_words = prepare_searchwords(search_words=args.search_word, wordlist=wordlist, remove_words=args.remove_searchword, show_searchwords=args.show_searchwords)
 
     run(search_words)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
