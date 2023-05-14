@@ -226,10 +226,10 @@ def run(search_words):
             
                     for c in comments:
                         c = c.extract()
-                        all_comments.append({'url': domain, 'comment': c})
+                        all_comments.append({'url': url, 'comment': c})
                         for sw in search_words:
                             if sw.lower() in c.lower():
-                                sensitive_comments.append({'url': domain, 'comment': c})
+                                sensitive_comments.append({'url': url, 'comment': c})
                                 break
 
             else:
