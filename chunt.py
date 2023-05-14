@@ -269,6 +269,8 @@ def run(search_words):
             print('[+] URL: {}'.format(ac['url']))
             print('[+] Comment: {}'.format(ac['comment']))
             line()
+    line()
+    print('[+] Comment Hunt finished')
 
 def main():
 
