@@ -243,15 +243,16 @@ def run(search_words):
     print(f'[i] Out of scope: {len(oos_targets)}')
 
     if args.show_urls:
-        print('[+] All found urls in scope:')
+        print('[+] URLs in scope:')
         for u in targets:
             state = 'scanned' if u in scanned else 'not scanned'
             box = '+' if u in scanned else '!'
             print(f'[{box}] {u} ({state})')
         line()
-        print('[i] Not in scope urls:')
+        print('[i] URLs not in scope:')
         for oos in oos_targets:
-            print(f'[i] {oos} (not scanned)')
+            if oos is not None or oos.strip() != "":
+                print(f'[i] {oos} (not scanned)')
 
 
     if len(sensitive_comments) > 0:
