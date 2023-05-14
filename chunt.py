@@ -209,6 +209,7 @@ def run(search_words):
                 ret = session.get(url, verify=args.ssl, cookies=cookies, allow_redirects=args.redirect, headers=headers, timeout=args.timeout)
             except:
                 print(f'[!] {url} not reached')
+                continue
             scanned.add(url)
             
             if ret.ok:
