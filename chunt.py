@@ -205,7 +205,10 @@ def run(search_words):
     for cur_depth in range(args.depth):
         for url in targets.difference(scanned):
             print(f'[+] Crawling {url}')
-            ret = session.get(url, verify=args.ssl, cookies=cookies, allow_redirects=args.redirect, headers=headers, timeout=args.timeout)
+            try:
+                ret = session.get(url, verify=args.ssl, cookies=cookies, allow_redirects=args.redirect, headers=headers, timeout=args.timeout)
+            except:
+                print(f'[!] {url} not reached')
             scanned.add(url)
             
             if ret.ok:
