@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 import argparse
 import os
 import sys
@@ -260,6 +260,7 @@ def run(args, search_words):
     print(f'[i] Out of scope: {len(oos_targets)}')
 
     if args.show_urls:
+        line()
         print('[+] URLs in scope:')
         for u in targets:
             state = 'scanned' if u in scanned else 'not scanned'
@@ -273,6 +274,7 @@ def run(args, search_words):
 
 
     if len(sensitive_comments) > 0:
+        line()
         print(f'[+] {len(sensitive_comments)} findings')
         for sc in sensitive_comments:
             print(100*'=')
@@ -280,6 +282,7 @@ def run(args, search_words):
             print('[+] Comment: {}'.format(sc['comment']))
             line()
     else:
+        line()
         print('[i] No sensitive comments found :)')
     if args.show_all_comments and len(all_comments) > 0:
         line()
