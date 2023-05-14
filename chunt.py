@@ -279,6 +279,8 @@ def run(args, search_words):
             print('[+] URL: {}'.format(sc['url']))
             print('[+] Comment: {}'.format(sc['comment']))
             line()
+    else:
+        print('[i] No sensitive comments found :)')
     if args.show_all_comments and len(all_comments) > 0:
         line()
         print(f'[+] All comments ({len(all_comments)}):')
