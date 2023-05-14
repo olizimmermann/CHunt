@@ -224,13 +224,13 @@ def run(search_words):
                     elif href is not None and href not in targets:
                         oos_targets.add(href)
             
-                    for c in comments:
-                        c = c.extract()
-                        all_comments.append({'url': url, 'comment': c})
-                        for sw in search_words:
-                            if sw.lower() in c.lower():
-                                sensitive_comments.append({'url': url, 'comment': c})
-                                break
+                for c in comments:
+                    c = c.extract()
+                    all_comments.append({'url': url, 'comment': c})
+                    for sw in search_words:
+                        if sw.lower() in c.lower():
+                            sensitive_comments.append({'url': url, 'comment': c})
+                            break
 
             else:
                 print(f'[!] HTTP code {ret.status_code} for {url}')
