@@ -27,7 +27,7 @@ banner = """
 | |    |  _  | | | | '_ \| __|
 | \__/\| | | | |_| | | | | |_ 
  \____/\_| |_/\__,_|_| |_|\__|
-                              
+         The Comment Hunter                            
          Github @olizimmermann
 
 """
@@ -117,18 +117,18 @@ def prepare_cookies(cookies : list) -> dict:
             print(f'[+] Cookie: {cookie} = {final_cookies[cookie]}')
     return final_cookies
 
-def prepare_proxies() -> dict:
-    if args.proxy_host is None:
+def prepare_proxies(proxy_host: str = None, proxy_port: int = None, proxy_user: str = None, proxy_password: str = None) -> dict:
+    if proxy_host is None:
         proxies = None
         print('[!] No proxy defined')
-    elif args.proxy_user is None:
-        proxy_host = args.proxy_host.replace('http://', '').replace('https://', '')
-        proxies = {'https': f'http://{proxy_host}:{args.proxy_port}', 'http': f'http://{proxy_host}:{args.proxy_port}'}
+    elif proxy_user is None:
+        proxy_host = proxy_host.replace('http://', '').replace('https://', '')
+        proxies = {'https': f'http://{proxy_host}:{proxy_port}', 'http': f'http://{proxy_host}:{proxy_port}'}
         print(f'[+] Proxy defined: http://{proxy_host}:{args.proxy_port}')
     else:
-        proxy_host = args.proxy_host.replace('http://', '').replace('https://', '')
-        proxies = {'https': f'http://{args.proxy_user}:{args.proxy_pass}@{proxy_host}:{args.proxy_port}', 'http': f'http://{args.proxy_user}:{args.proxy_pass}@{proxy_host}:{args.proxy_port}'}
-        print(f'[+] Proxy defined: http://{args.proxy_user}:{args.proxy_pass}@{proxy_host}:{args.proxy_port}')
+        proxy_host = proxy_host.replace('http://', '').replace('https://', '')
+        proxies = {'https': f'http://{proxy_user}:{proxy_password}@{proxy_host}:{proxy_port}', 'http': f'http://{proxy_user}:{proxy_password}@{proxy_host}:{proxy_port}'}
+        print(f'[+] Proxy defined: http://{proxy_user}:{proxy_password}@{proxy_host}:{proxy_port}')
     return proxies
 
 def prepare_target(target) -> tuple:
@@ -171,10 +171,10 @@ def prepare_headers(headers, user_agent, referrer) -> dict:
     
     return final_headers
 
-def run(search_words):
+def run(args, search_words):
     line()
     session = requests.Session()
-    proxies = prepare_proxies()
+    proxies = prepare_proxies(proxy_host=args.proxy_host, proxy_port=args.proxy_port, proxy_user=args.proxy_user, proxy_password=args.proxy_password)
     if proxies is not None: 
         session.proxies.update(proxies)
 
@@ -272,6 +272,8 @@ def run(search_words):
             print('[+] URL: {}'.format(ac['url']))
             print('[+] Comment: {}'.format(ac['comment']))
             line()
+    if len(all_comments) > 0:
+        print(100*'=')
     line()
     print('[+] Comment Hunt finished')
 
@@ -297,7 +299,7 @@ def main():
     
     search_words = prepare_searchwords(search_words=args.search_word, wordlist=wordlist, remove_words=args.remove_searchword, show_searchwords=args.show_searchwords)
 
-    run(search_words)
+    run(args, search_words)
 
 
 
@@ -339,5 +341,4 @@ args = parser.parse_args()
 
 
 if __name__ == '__main__':
-    #print(args)
     main()
