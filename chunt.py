@@ -45,8 +45,8 @@ def get_wordlist(path: str) -> list:
     with open(path, 'rt') as f:
         for line in f:
             search_word = line.replace('\n','')
-            if search_word not in wordlist:
-                wordlist.append(search_word)
+            if search_word not in wordlist and search_word.strip() != "":
+                wordlist.append(search_word.strip())
     if len(wordlist) > 0:
         print(f'[+] Wordlist added ({len(wordlist)} search words)')
     else:
