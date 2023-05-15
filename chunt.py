@@ -44,16 +44,16 @@ def get_wordlist(path: str) -> list:
         return []
     with open(path, 'rt') as f:
         for line in f:
-            searchword = line.replace('\n','')
-            if searchword not in wordlist:
-                wordlist.appent(searchword)
+            search_word = line.replace('\n','')
+            if search_word not in wordlist:
+                wordlist.append(search_word)
     if len(wordlist) > 0:
         print(f'[+] Wordlist added ({len(wordlist)} search words)')
     else:
         print(f'[!] Given wordlist contains 0 entries: {path}')
     return wordlist
 
-def prepare_searchwords(search_words: list = None, wordlist: list = None, remove_words: list = None, show_searchwords: bool = False) -> list:
+def prepare_search_words(search_words: list = None, wordlist: list = None, remove_words: list = None, show_search_words: bool = False) -> list:
     final_wordlist = []
     ignore_words = []
     default_words = "flag,root,admin,token,pass,pw,password,passwort,key,passphrase,secret,code,pin,bearer,passwd".split(',')
@@ -81,10 +81,11 @@ def prepare_searchwords(search_words: list = None, wordlist: list = None, remove
         if search_word not in ignore_words:
             final_wordlist.append(search_word)
 
-    print(f'[+] Used searchwords: {len(final_wordlist)}')
-    if show_searchwords:
+    print(f'[+] Used search words: {len(final_wordlist)}')
+    if show_search_words:
+        line()
         for word in final_wordlist:
-            print(f'[+] {word}')
+            print(f'[+] Search word: {word}')
 
     return final_wordlist
 
@@ -119,7 +120,7 @@ def prepare_cookies(cookies : list) -> dict:
 def prepare_proxies(proxy_host: str = None, proxy_port: int = None, proxy_user: str = None, proxy_password: str = None) -> dict:
     if proxy_host is None:
         proxies = None
-        print('[!] No proxy defined')
+        print('[i] No proxy defined')
     elif proxy_user is None:
         proxy_host = proxy_host.replace('http://', '').replace('https://', '')
         proxies = {'https': f'http://{proxy_host}:{proxy_port}', 'http': f'http://{proxy_host}:{proxy_port}'}
@@ -136,6 +137,9 @@ def prepare_target(target) -> tuple:
             target = 'https://' + target
         else:
             target = 'http://' + target
+    
+    if target.endswith('/'):
+        target = target[:-1]
 
     try:
         domain = urlparse(target).netloc
@@ -161,6 +165,8 @@ def prepare_headers(headers, user_agent, referrer) -> dict:
                     print(f'[!] Wrong format for header used: {h}')
     if user_agent is not None:
         final_headers['User-Agent'] = user_agent
+    else:
+        final_headers['User-Agent'] = f'CHunt/{version}'
     if referrer is not None:
         final_headers['Referer'] = referrer
     
@@ -202,28 +208,38 @@ def run(args, search_words):
     js_comment_pattern = r'[^:]\/\/(.*)|\/\*([\s\S]*)?\*\/'
 
     print(f'[+] Max depth for spidering: {args.depth}')
-    line()
     for cur_depth in range(args.depth):
+        line()
+        if len(targets.difference(scanned)) == 0:
+            break
+        print(f'[i] Depth {cur_depth+1}')
         for url in targets.difference(scanned):
-            print(f'[+] Crawling {url}')
             try:
                 ret = session.get(url, verify=args.ssl, cookies=cookies, allow_redirects=args.redirect, headers=headers, timeout=args.timeout)
             except:
-                print(f'[!] {url} not reached')
+                print(f'[!] 400 {url}')
                 scanned.add(url)
                 continue
             scanned.add(url)
 
             if ret.ok:
+                print(f'[+] {ret.status_code} {url}')
                 soup = bs(ret.text, 'html.parser')
                 comments = soup.find_all(string=lambda text: isinstance(text, Comment))
                 js = soup.find_all('script')
-                new_urls = soup.find_all('a')
+                new_urls = soup.find_all('a') + soup.find_all('link')
                 for u in new_urls:
                     href = u.get('href')
+                    if href is not None:
+                        href = href.strip()
+                        href_domain = urlparse(href).netloc
+                    if href_domain is None or href_domain == "":
+                        continue
                     if href is not None and href.endswith('/'):
                         href = href[:-1]
-                    if href is not None and domain in href and targets.add(href):
+                    if href is not None and href.startswith('/'):
+                        href = url + href
+                    if href is not None and domain in href_domain and targets.add(href):
                         print(f'[+] Added to target pool: {href}')
                     elif href is not None and href not in targets:
                         oos_targets.add(href)
@@ -251,7 +267,7 @@ def run(args, search_words):
                                                 sensitive_comments.append({'url': url, 'comment': jc})
 
             else:
-                print(f'[!] HTTP code {ret.status_code} for {url}')
+                print(f'[!] {ret.status_code} {url}')
             if args.sleep is not None:
                 sleep(args.sleep)
     
@@ -278,7 +294,7 @@ def run(args, search_words):
         line()
         print(f'[+] {len(sensitive_comments)} findings')
         for sc in sensitive_comments:
-            print(100*'=')
+            print('[+] '+100*'=')
             print('[+] URL: {}'.format(sc['url']))
             print('[+] Comment: {}'.format(sc['comment']))
             line()
@@ -289,12 +305,12 @@ def run(args, search_words):
         line()
         print(f'[+] All comments ({len(all_comments)}):')
         for ac in all_comments:
-            print(100*'=')
+            print('[+] '+100*'=')
             print('[+] URL: {}'.format(ac['url']))
             print('[+] Comment: {}'.format(ac['comment']))
             line()
     if len(all_comments) > 0:
-        print(100*'=')
+        print('[+] '+100*'=')
     line()
     print('[+] Comment Hunt finished')
 
@@ -318,7 +334,7 @@ def main():
     else:
         wordlist = None
     
-    search_words = prepare_searchwords(search_words=args.search_word, wordlist=wordlist, remove_words=args.remove_searchword, show_searchwords=args.show_searchwords)
+    search_words = prepare_search_words(search_words=args.search_word, wordlist=wordlist, remove_words=args.remove_search_word, show_search_words=args.show_search_words)
 
     run(args, search_words)
 
@@ -329,8 +345,8 @@ parser = argparse.ArgumentParser(prog='chunt', description="Spider through your 
 parser.add_argument('-t', '--target', type=str, help="Target URL/domain", required=False)
 parser.add_argument('-s', '--search-word', type=str, help="Add own search word[s]", required=False, nargs='*', action='append')
 parser.add_argument('--wordlist', type=str, help="Wordlist with search words", required=False)
-parser.add_argument('-rm', '--remove-searchword',type=str, help="Remove a default searchword", required=False, nargs='*', action='append')
-parser.add_argument('--show-searchwords', help="Prints out used searchwords (default: False)", required=False, action='store_true')
+parser.add_argument('-rm', '--remove-search-word',type=str, help="Remove a default search word", required=False, nargs='*', action='append')
+parser.add_argument('--show-search-words', help="Prints out used search words (default: False)", required=False, action='store_true')
 
 parser.add_argument('-d', '--depth', type=int, help="Max spider depth (default 1)", default=1, required=False)
 
