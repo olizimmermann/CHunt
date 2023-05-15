@@ -230,11 +230,12 @@ def run(args, search_words):
             
                 for c in comments:
                     c = c.extract()
-                    all_comments.append({'url': url, 'comment': c})
-                    for sw in search_words:
-                        if sw.lower() in c.lower():
-                            sensitive_comments.append({'url': url, 'comment': c})
-                            break
+                    if c.strip() != "":
+                        all_comments.append({'url': url, 'comment': c})
+                        for sw in search_words:
+                            if sw.lower() in c.lower():
+                                sensitive_comments.append({'url': url, 'comment': c})
+                                break
                 if args.enable_js:
                     for script in js:
                         script = script.text
