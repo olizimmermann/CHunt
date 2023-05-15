@@ -274,7 +274,7 @@ def run(args, search_words):
     line()
     print('[+] Result:')
     print(f'[+] {len(scanned)}/{len(targets)} URLs scanned')
-    print(f'[i] Out of scope: {len(oos_targets)}')
+    print(f'[i] Out of scope: {len(oos_targets)} URLs')
 
     if args.show_urls:
         line()
@@ -310,6 +310,7 @@ def run(args, search_words):
             print('[+] Comment: {}'.format(ac['comment']))
             line()
     if len(all_comments) > 0:
+        print(f'[i] {len(all_comments)} comments found')
         print('[+] '+100*'=')
     line()
     print('[+] Comment Hunt finished')
