@@ -238,6 +238,8 @@ def run(args, search_words):
                     if href is not None and href.endswith('/'):
                         href = href[:-1]
                     if href is not None and href.startswith('/'):
+                        if url.endswith('/'):
+                            url = url[:-1]
                         href = url + href
                     if href is not None and domain in href_domain and targets.add(href):
                         print(f'[+] Added to target pool: {href}')
