@@ -42,6 +42,10 @@ If you want to add your own words use the `-s` option. If you need to remove def
 
 `python3 chunt.py -t example.com -r -d 3 -rm token -s "foobar"`
 
+## Example
+![image](https://github.com/olizimmermann/CHunt/assets/73298827/2ce61114-a157-4fd2-8061-a84c82e45462)
+
+
 ## Usage
 
 ```
