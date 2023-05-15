@@ -235,19 +235,19 @@ def run(args, search_words):
                         if sw.lower() in c.lower():
                             sensitive_comments.append({'url': url, 'comment': c})
                             break
-                
-                for script in js:
-                    script = script.text
-                    js_comments = re.findall(js_comment_pattern, script)
-                    if js_comments is not None and len(js_comments) > 0:
-                        for js_comment in js_comments:
-                            for jc in js_comment:
-                                if jc != "":
-                                    jc = jc.strip()
-                                    all_comments.append({'url': url, 'comment': jc})
-                                    for sw in search_words:
-                                        if sw.lower() in jc.lower():
-                                            sensitive_comments.append({'url': url, 'comment': jc})
+                if args.enable_js:
+                    for script in js:
+                        script = script.text
+                        js_comments = re.findall(js_comment_pattern, script)
+                        if js_comments is not None and len(js_comments) > 0:
+                            for js_comment in js_comments:
+                                for jc in js_comment:
+                                    if jc != "":
+                                        jc = jc.strip()
+                                        all_comments.append({'url': url, 'comment': jc})
+                                        for sw in search_words:
+                                            if sw.lower() in jc.lower():
+                                                sensitive_comments.append({'url': url, 'comment': jc})
 
             else:
                 print(f'[!] HTTP code {ret.status_code} for {url}')
@@ -335,6 +335,8 @@ parser.add_argument('-d', '--depth', type=int, help="Max spider depth (default 1
 
 parser.add_argument('--show-urls', help="Show overview of all crawled urls (default False)", required=False, action='store_true')
 parser.add_argument('--show-all-comments', help="Show overview of all crawled comments (default False)", required=False, action='store_true')
+
+parser.add_argument('--enable-js', help="Enable JavaScript comment parsing (BETA) (default False)", required=False, action='store_true')
 
 parser.add_argument('--ssl', help="Verify SSL (default False)", required=False, action='store_true')
 parser.add_argument('-r', '--redirect', help="Follow redirects (default: False)", required=False, action='store_true')
