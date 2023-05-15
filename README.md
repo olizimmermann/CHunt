@@ -1,6 +1,15 @@
 # CHunt (Comment Hunter)
+```
+ _____  _   _             _   
+/  __ \| | | |           | |  
+| /  \/| |_| |_   _ _ __ | |_ 
+| |    |  _  | | | | '_ \| __|
+| \__/\| | | | |_| | | | | |_ 
+ \____/\_| |_/\__,_|_| |_|\__|
 
-CHunt is a powerful Python tool designed to uncover forgotten comments in web applications. It serves as a valuable aid for both developers and penetration testers in gaining insights into the codebase.
+```
+
+CHunt is a powerful Python tool designed to uncover forgotten comments in web applications. It serves as a valuable aid for both developers and penetration testers in gaining insights into the codebase and find **senstive** comments like tokens or passwords.
 
 # QuickStart
 
@@ -8,6 +17,30 @@ CHunt is a powerful Python tool designed to uncover forgotten comments in web ap
 pip install -r requirements.txt
 python3 chunt.py -t example.com -r -d 3 
 ```
+## Default search words
+
+```
+- flag
+- root
+- admin
+- token
+- pass
+- pw
+- password
+- passwort
+- key
+- passphrase
+- secret
+- code
+- pin
+- bearer
+- passwd
+- credential
+```
+
+If you want to add your own words use the `-s` option. If you need to remove default search words use the `-rm` option. To list all used search words, use the option `--show-search-words`.
+
+`python3 chunt.py -t example.com -r -d 3 -rm token -s "foobar"`
 
 ## Usage
 
