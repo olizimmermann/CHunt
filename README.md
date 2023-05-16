@@ -14,6 +14,8 @@ CHunt is a powerful Python tool designed to uncover forgotten comments in web ap
 # QuickStart
 
 ```
+python3 -m venv .venv # if you want to execute in virtual env
+source .venv/bin/activate # if you want to execute in virtual env
 pip install -r requirements.txt
 python3 chunt.py -t example.com -r -d 3 
 ```
