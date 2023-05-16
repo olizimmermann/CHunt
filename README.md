@@ -24,7 +24,6 @@ python3 chunt.py -t example.com -r -d 3
 - root
 - admin
 - token
-- pass
 - pw
 - password
 - passwort
@@ -32,7 +31,6 @@ python3 chunt.py -t example.com -r -d 3
 - passphrase
 - secret
 - code
-- pin
 - bearer
 - passwd
 - credential

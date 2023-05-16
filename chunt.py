@@ -56,7 +56,7 @@ def get_wordlist(path: str) -> list:
 def prepare_search_words(search_words: list = None, wordlist: list = None, remove_words: list = None, show_search_words: bool = False) -> list:
     final_wordlist = []
     ignore_words = []
-    default_words = "flag,root,admin,token,pass,pw,password,passwort,key,passphrase,secret,code,pin,bearer,passwd,credential".split(',')
+    default_words = "flag,root,admin,token,pw,password,passwort,key,passphrase,secret,code,bearer,passwd,credential".split(',')
     if remove_words is not None:
         for remove_word in remove_words:
             for rw in remove_word:
