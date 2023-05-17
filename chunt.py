@@ -16,7 +16,7 @@ from requests.auth import HTTPBasicAuth, HTTPDigestAuth
 warnings.filterwarnings("ignore", category=XMLParsedAsHTMLWarning, module='bs4')
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
-version = '0.0.1'
+version = '0.0.2'
 
 banner = """
 
