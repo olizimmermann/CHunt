@@ -205,7 +205,7 @@ def run(args, search_words):
     all_comments = []
     sensitive_comments = []
     
-    js_comment_pattern = r'[^:]\/\/(.*)|\/\*([\s\S]*)?\*\/'
+    js_comment_pattern = r'[^:]\/\/.*|\/\*[\s\S]*?\*\/'
 
     print(f'[+] Max depth for spidering: {args.depth}')
     for cur_depth in range(args.depth):
@@ -260,13 +260,12 @@ def run(args, search_words):
                         js_comments = re.findall(js_comment_pattern, script)
                         if js_comments is not None and len(js_comments) > 0:
                             for js_comment in js_comments:
-                                for jc in js_comment:
-                                    if jc != "":
-                                        jc = jc.strip()
-                                        all_comments.append({'url': url, 'comment': jc})
-                                        for sw in search_words:
-                                            if sw.lower() in jc.lower():
-                                                sensitive_comments.append({'url': url, 'comment': jc})
+                                if js_comment != "":
+                                    js_comment = js_comment.replace('/*','').replace('*/','').replace('//','').strip()
+                                    all_comments.append({'url': url, 'comment': js_comment})
+                                    for sw in search_words:
+                                        if sw.lower() in js_comment.lower():
+                                            sensitive_comments.append({'url': url, 'comment': js_comment})
 
             else:
                 print(f'[!] {ret.status_code} {url}')
