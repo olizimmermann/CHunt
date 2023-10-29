@@ -16,7 +16,7 @@ from requests.auth import HTTPBasicAuth, HTTPDigestAuth
 warnings.filterwarnings("ignore", category=XMLParsedAsHTMLWarning, module='bs4')
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
-version = '0.0.2'
+version = '0.1.0'
 
 banner = """
 
@@ -34,13 +34,25 @@ banner = """
 
 print(banner)
 
+class bcolors:
+    # print(f"{bcolors.WARNING}Warning: No active frommets remain. Continue?{bcolors.ENDC}")
+    HEADER = '\033[95m'
+    OKBLUE = '\033[94m'
+    OKCYAN = '\033[96m'
+    OKGREEN = '\033[92m'
+    WARNING = '\033[93m'
+    FAIL = '\033[91m'
+    ENDC = '\033[0m'
+    BOLD = '\033[1m'
+    UNDERLINE = '\033[4m'
+
 def line():
     print('[+]')
 
 def get_wordlist(path: str) -> list:
     wordlist = []
     if not os.path.isfile(path):
-        print(f'[!] Given wordlist not found: {path}')
+        print(f'{bcolors.WARNING}[!]{bcolors.ENDC} Given wordlist not found: {path}')
         return []
     with open(path, 'rt') as f:
         for line in f:
@@ -50,13 +62,16 @@ def get_wordlist(path: str) -> list:
     if len(wordlist) > 0:
         print(f'[+] Wordlist added ({len(wordlist)} search words)')
     else:
-        print(f'[!] Given wordlist contains 0 entries: {path}')
+        print(f'{bcolors.FAIL}[!]{bcolors.ENDC} Given wordlist contains 0 entries: {path}')
     return wordlist
 
 def prepare_search_words(search_words: list = None, wordlist: list = None, remove_words: list = None, show_search_words: bool = False) -> list:
     final_wordlist = []
     ignore_words = []
-    default_words = "flag,root,admin,token,pw,password,passwort,key,passphrase,secret,code,bearer,passwd,credential".split(',')
+    if not args.remove_default_search_words:
+        default_words = "flag,root,admin,token,pw,password,passwort,key,passphrase,secret,code,bearer,passwd,credential".split(',')
+    else:
+        default_words = []
     if remove_words is not None:
         for remove_word in remove_words:
             for rw in remove_word:
@@ -106,8 +121,8 @@ def prepare_cookies(cookies : list) -> dict:
                         value = value[:-1]
                     final_cookies[key] = value
                 except:
-                    print(f'[!] Could not read cookie {c}')
-                    print(f'[!] Please use --cookie "key=value; key2=value2" or --cookie key=value --cookie key2=value2')
+                    print(f'{bcolors.FAIL}[!]{bcolors.ENDC} Could not read cookie {c}')
+                    print(f'{bcolors.FAIL}[!]{bcolors.ENDC} Please use --cookie "key=value; key2=value2" or --cookie key=value --cookie key2=value2')
     
 
     if len(final_cookies) > 0:
@@ -145,7 +160,7 @@ def prepare_target(target) -> tuple:
         domain = urlparse(target).netloc
         print(f'[+] Domain in scope for spidering: {domain}')
     except:
-        print(f'[!] No valid target given: {target}')
+        print(f'{bcolors.FAIL}[!]{bcolors.ENDC} No valid target given: {target}')
         print('\n\n')
         parser.print_help()
         sys.exit(1)
@@ -162,7 +177,7 @@ def prepare_headers(headers, user_agent, referrer) -> dict:
                     value = h.split(':')[1].strip()
                     final_headers[key.title()] = value
                 except:
-                    print(f'[!] Wrong format for header used: {h}')
+                    print(f'{bcolors.FAIL}[!]{bcolors.ENDC} Wrong format for header used: {h}')
     if user_agent is not None:
         final_headers['User-Agent'] = user_agent
     else:
@@ -205,6 +220,7 @@ def run(args, search_words):
     all_comments = []
     sensitive_comments = []
     
+    
     js_comment_pattern = r'[^:]\/\/.*|\/\*[\s\S]*?\*\/'
 
     print(f'[+] Max depth for spidering: {args.depth}')
@@ -217,7 +233,7 @@ def run(args, search_words):
             try:
                 ret = session.get(url, verify=args.ssl, cookies=cookies, allow_redirects=args.redirect, headers=headers, timeout=args.timeout)
             except:
-                print(f'[!] 400 {url}')
+                print(f'{bcolors.FAIL}[!]{bcolors.ENDC} 400 {url}')
                 scanned.add(url)
                 continue
             scanned.add(url)
@@ -268,7 +284,7 @@ def run(args, search_words):
                                             sensitive_comments.append({'url': url, 'comment': js_comment})
 
             else:
-                print(f'[!] {ret.status_code} {url}')
+                print(f'{bcolors.FAIL}[!]{bcolors.ENDC} {ret.status_code} {url}')
             if args.sleep is not None:
                 sleep(args.sleep)
     
@@ -295,13 +311,13 @@ def run(args, search_words):
         line()
         print(f'[+] {len(sensitive_comments)} findings')
         for sc in sensitive_comments:
-            print('[+] '+100*'=')
+            print(f'[+] '+100*'=')
             print('[+] URL: {}'.format(sc['url']))
-            print('[+] Comment: {}'.format(sc['comment']))
+            print(f'[+] Comment: {bcolors.WARNING}{sc["comment"]}{bcolors.ENDC}')
             line()
     else:
         line()
-        print('[i] No sensitive comments found :)')
+        print(f'[i] {bcolors.OKGREEN}No sensitive comments found :){bcolors.ENDC}')
     if args.show_all_comments and len(all_comments) > 0:
         line()
         print(f'[+] All comments ({len(all_comments)}):')
@@ -323,7 +339,7 @@ def main():
         sys.exit(1)
 
     if args.target is None:
-        print('[!] Target needs to be defined')
+        print(f'{bcolors.FAIL}[!]{bcolors.ENDC} Target needs to be defined')
         print('\n\n')
         parser.print_help()
         sys.exit(1)
@@ -337,7 +353,13 @@ def main():
         wordlist = None
     
     search_words = prepare_search_words(search_words=args.search_word, wordlist=wordlist, remove_words=args.remove_search_word, show_search_words=args.show_search_words)
-
+    
+    if len(search_words) == 0:
+        print(f'{bcolors.FAIL}[!]{bcolors.ENDC} No search words defined')
+        print('\n\n')
+        parser.print_help()
+        sys.exit(1)
+    
     run(args, search_words)
 
 
@@ -348,6 +370,7 @@ parser.add_argument('-t', '--target', type=str, help="Target URL/domain", requir
 parser.add_argument('-s', '--search-word', type=str, help="Add own search word[s]", required=False, nargs='*', action='append')
 parser.add_argument('--wordlist', type=str, help="Wordlist with search words", required=False)
 parser.add_argument('-rm', '--remove-search-word',type=str, help="Remove a default search word", required=False, nargs='*', action='append')
+parser.add_argument('-rmds','--remove-default-search-words', help="Remove all default search words", required=False, action='store_true')
 parser.add_argument('--show-search-words', help="Prints out used search words (default: False)", required=False, action='store_true')
 
 parser.add_argument('-d', '--depth', type=int, help="Max spider depth (default 1)", default=1, required=False)
