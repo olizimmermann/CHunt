@@ -49,9 +49,11 @@ If you want to add your own words use the `-s` option. If you need to remove def
 ## Usage
 
 ```
-usage: chunt [-h] [-t TARGET] [-s [SEARCH_WORD ...]] [--wordlist WORDLIST] [-rm [REMOVE_SEARCH_WORD ...]] [--show-search-words] [-d DEPTH] [--show-urls] [--show-all-comments] [--enable-js] [--ssl] [-r] [--timeout TIMEOUT] [-H HEADER [HEADER ...]] [--user-agent USER_AGENT]
-             [--referrer REFERRER] [-c [COOKIE ...]] [--proxy-host PROXY_HOST] [--proxy-port PROXY_PORT] [--proxy-user PROXY_USER] [--proxy-password PROXY_PASSWORD] [-a {basic,digest}] [-u USER] [-p PASSWORD] [--sleep SLEEP] [-v]
-
+usage: chunt [-h] [-t TARGET] [-s [SEARCH_WORD ...]] [--wordlist WORDLIST] [-rm [REMOVE_SEARCH_WORD ...]] [-rmds] [--show-search-words] [-d DEPTH] [--show-urls]
+             [--show-all-comments] [--disable-js] [--ssl] [-r] [--timeout TIMEOUT] [-H HEADER [HEADER ...]] [--user-agent USER_AGENT] [--referrer REFERRER]
+             [-c [COOKIE ...]] [--proxy-host PROXY_HOST] [--proxy-port PROXY_PORT] [--proxy-user PROXY_USER] [--proxy-password PROXY_PASSWORD] [-a {basic,digest}]
+             [-u USER] [-p PASSWORD] [--sleep SLEEP] [-v]
+             
 Spider through your targeted domain and fetch all comments developer left. Especially sensitive ones. Those are defined by search words. CHunt already brings the basic ones but keeps it open to you in the end.
 
 options:
@@ -59,26 +61,28 @@ options:
   -t TARGET, --target TARGET
                         Target URL/domain
   -s [SEARCH_WORD ...], --search-word [SEARCH_WORD ...]
-                        Add your own search word[s]
+                        Add own search word[s]
   --wordlist WORDLIST   Wordlist with search words
   -rm [REMOVE_SEARCH_WORD ...], --remove-search-word [REMOVE_SEARCH_WORD ...]
                         Remove a default search word
-  --show-search-words   Print out used search words (default: False)
+  -rmds, --remove-default-search-words
+                        Remove all default search words
+  --show-search-words   Prints out used search words (default: False)
   -d DEPTH, --depth DEPTH
-                        Maximum spider depth (default 1)
-  --show-urls           Show an overview of all crawled URLs (default False)
-  --show-all-comments   Show an overview of all crawled comments (default False)
-  --enable-js           Enable JavaScript comment parsing (BETA) (default False)
+                        Max spider depth (default 1)
+  --show-urls           Show overview of all crawled urls (default False)
+  --show-all-comments   Show overview of all crawled comments (default False)
+  --disable-js          Disable JavaScript comment parsing (BETA) (default False)
   --ssl                 Verify SSL (default False)
   -r, --redirect        Follow redirects (default: False)
   --timeout TIMEOUT     Timeout in seconds for HTTP requests (default 10s)
   -H HEADER [HEADER ...], --header HEADER [HEADER ...]
-                        Header information, usage: -H "Accept:*/*" -H "Accept-Encoding:gzip, deflate"
+                        Header infos, usage: -H "Accept:*/*" -H "Accept-Encoding:gzip, deflate"
   --user-agent USER_AGENT
-                        Define your own user-agent
-  --referrer REFERRER   Define the referrer
+                        Define own user-agent
+  --referrer REFERRER   Define referrer
   -c [COOKIE ...], --cookie [COOKIE ...]
-                        Add your own cookie[s], name=value; name2=value2
+                        Add own cookie[s], name=value; name2=value2
   --proxy-host PROXY_HOST
                         Proxy address/host
   --proxy-port PROXY_PORT
@@ -92,7 +96,7 @@ options:
   -u USER, --user USER  Authentication user
   -p PASSWORD, --password PASSWORD
                         Authentication password
-  --sleep SLEEP         Sleep between crawling newly found URLs (default 0)
+  --sleep SLEEP         Sleep between crawling new found urls (default 0)
   -v, --version         Version of CHunt
 
 CHunt only spiders within the same domain.
