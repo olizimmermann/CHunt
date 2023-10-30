@@ -3,9 +3,10 @@ import argparse
 import os
 import sys
 import re
+import signal
 import warnings
 from time import sleep
-from urllib.parse import urlparse
+from urllib.parse import urlparse, urljoin
 
 import requests
 import urllib3
@@ -16,7 +17,7 @@ from requests.auth import HTTPBasicAuth, HTTPDigestAuth
 warnings.filterwarnings("ignore", category=XMLParsedAsHTMLWarning, module='bs4')
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
-version = '0.1.0'
+version = '0.1.1'
 
 banner = """
 
@@ -45,6 +46,10 @@ class bcolors:
     ENDC = '\033[0m'
     BOLD = '\033[1m'
     UNDERLINE = '\033[4m'
+
+def signal_handler(sig, frame):
+    print(f'{bcolors.FAIL}[!]{bcolors.ENDC} User aborted')
+    sys.exit(1)
 
 def line():
     print('[+]')
@@ -158,7 +163,7 @@ def prepare_target(target) -> tuple:
 
     try:
         domain = urlparse(target).netloc
-        print(f'[+] Domain in scope for spidering: {domain}')
+        print(f'[+] Domain in scope for spidering: {bcolors.BOLD}{domain}{bcolors.ENDC}')
     except:
         print(f'{bcolors.FAIL}[!]{bcolors.ENDC} No valid target given: {target}')
         print('\n\n')
@@ -182,6 +187,8 @@ def prepare_headers(headers, user_agent, referrer) -> dict:
         final_headers['User-Agent'] = user_agent
     else:
         final_headers['User-Agent'] = f'CHunt/{version}'
+        # use google bot user agent
+        # final_headers['User-Agent'] = 'Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)'
     if referrer is not None:
         final_headers['Referer'] = referrer
     
@@ -222,72 +229,85 @@ def run(args, search_words):
     
     
     js_comment_pattern = r'[^:]\/\/.*|\/\*[\s\S]*?\*\/'
+    print(f'[+] Disable JS comments: {args.disable_js}')
 
     print(f'[+] Max depth for spidering: {args.depth}')
-    for cur_depth in range(args.depth):
-        line()
-        if len(targets.difference(scanned)) == 0:
-            break
-        print(f'[i] Depth {cur_depth+1}')
-        for url in targets.difference(scanned):
-            try:
-                ret = session.get(url, verify=args.ssl, cookies=cookies, allow_redirects=args.redirect, headers=headers, timeout=args.timeout)
-            except:
-                print(f'{bcolors.FAIL}[!]{bcolors.ENDC} 400 {url}')
+    try:
+        for cur_depth in range(args.depth):
+            line()
+            if len(targets.difference(scanned)) == 0:
+                break
+            print(f'[i] Depth {cur_depth+1}')
+            for url in targets.difference(scanned):
+                try:
+                    ret = session.get(url, verify=args.ssl, cookies=cookies, allow_redirects=args.redirect, headers=headers, timeout=args.timeout)
+                except Exception as e:
+                    if e is KeyboardInterrupt:
+                        raise KeyboardInterrupt
+                    print(f'{bcolors.FAIL}[!]{bcolors.ENDC} 400 {url}')
+                    scanned.add(url)
+                    continue
                 scanned.add(url)
-                continue
-            scanned.add(url)
 
-            if ret.ok:
-                print(f'[+] {ret.status_code} {url}')
-                soup = bs(ret.text, 'html.parser')
-                comments = soup.find_all(string=lambda text: isinstance(text, Comment))
-                js = soup.find_all('script')
-                new_urls = soup.find_all('a') + soup.find_all('link')
-                for u in new_urls:
-                    href = u.get('href')
-                    if href is not None:
-                        href = href.strip()
-                        href_domain = urlparse(href).netloc
-                    if href_domain is None or href_domain == "":
-                        continue
-                    if href is not None and href.endswith('/'):
-                        href = href[:-1]
-                    if href is not None and href.startswith('/'):
-                        if url.endswith('/'):
-                            url = url[:-1]
-                        href = url + href
-                    if href is not None and domain in href_domain and targets.add(href):
-                        print(f'[+] Added to target pool: {href}')
-                    elif href is not None and href not in targets:
-                        oos_targets.add(href)
-            
-                for c in comments:
-                    c = c.extract()
-                    if c.strip() != "":
-                        all_comments.append({'url': url, 'comment': c})
-                        for sw in search_words:
-                            if sw.lower() in c.lower():
-                                sensitive_comments.append({'url': url, 'comment': c})
-                                break
-                if args.enable_js:
-                    for script in js:
-                        script = script.text
-                        js_comments = re.findall(js_comment_pattern, script)
-                        if js_comments is not None and len(js_comments) > 0:
-                            for js_comment in js_comments:
-                                if js_comment != "":
-                                    js_comment = js_comment.replace('/*','').replace('*/','').replace('//','').strip()
-                                    all_comments.append({'url': url, 'comment': js_comment})
-                                    for sw in search_words:
-                                        if sw.lower() in js_comment.lower():
-                                            sensitive_comments.append({'url': url, 'comment': js_comment})
+                if ret.ok:
+                    print(f'[+] {ret.status_code} {url}')
+                    soup = bs(ret.text, 'html.parser')
+                    comments = soup.find_all(string=lambda text: isinstance(text, Comment))
+                    js = soup.find_all('script')
+                    new_urls = soup.find_all('a') + soup.find_all('link')
+                    for u in new_urls:
+                        href = u.get('href')
+                        if href is not None:
+                            href = href.strip()
+                            href_domain = urlparse(href).netloc
+                            if not href.startswith('./') and not href.startswith('/') and not href.startswith('#'):
+                                if href_domain is None or href_domain == "":
+                                    continue
+                        if href is not None and href.startswith('/'):
+                            href = urljoin(url, href)
+                            href_domain = urlparse(href).netloc
+                        if href is not None and href.startswith('./'):
+                            href = urljoin(url , href)
+                            href_domain = urlparse(href).netloc
+                        if href is not None and href.startswith('#'):
+                            href = urljoin(url , href)
+                            href_domain = urlparse(href).netloc
+                        if href is not None and domain == href_domain:
+                            if not href.endswith('.pdf') and not href.endswith('.jpg') and not href.endswith('.jpeg') and not href.endswith('.png'):
+                                targets.add(href)
+                        elif href is not None and href not in targets:
+                            oos_targets.add(href)
 
-            else:
-                print(f'{bcolors.FAIL}[!]{bcolors.ENDC} {ret.status_code} {url}')
-            if args.sleep is not None:
-                sleep(args.sleep)
-    
+                            
+                        
+                    for c in comments:
+                        c = c.extract()
+                        if c.strip() != "":
+                            all_comments.append({'url': url, 'comment': c})
+                            for sw in search_words:
+                                if sw.lower() in c.lower():
+                                    sensitive_comments.append({'url': url, 'comment': c})
+                                    break
+                    if not args.disable_js:
+                        for script in js:
+                            script = script.text
+                            js_comments = re.findall(js_comment_pattern, script)
+                            if js_comments is not None and len(js_comments) > 0:
+                                for js_comment in js_comments:
+                                    if js_comment != "":
+                                        js_comment = js_comment.replace('/*','').replace('*/','').replace('//','').strip()
+                                        all_comments.append({'url': url, 'comment': js_comment})
+                                        for sw in search_words:
+                                            if sw.lower() in js_comment.lower():
+                                                sensitive_comments.append({'url': url, 'comment': js_comment})
+
+                else:
+                    print(f'{bcolors.FAIL}[!]{bcolors.ENDC} {ret.status_code} {url}')
+                if args.sleep is not None:
+                    sleep(args.sleep)
+    except KeyboardInterrupt:
+        print(f'{bcolors.FAIL}[!]{bcolors.ENDC} User aborted')
+    signal.signal(signal.SIGINT, signal_handler)
     line()
     print('[+] Result:')
     print(f'[+] {len(scanned)}/{len(targets)} URLs scanned')
@@ -333,7 +353,6 @@ def run(args, search_words):
     print('[+] Comment Hunt finished')
 
 def main():
-
     if args.version:
         print(f'[i] CHunt Version {version}')
         sys.exit(1)
@@ -378,7 +397,7 @@ parser.add_argument('-d', '--depth', type=int, help="Max spider depth (default 1
 parser.add_argument('--show-urls', help="Show overview of all crawled urls (default False)", required=False, action='store_true')
 parser.add_argument('--show-all-comments', help="Show overview of all crawled comments (default False)", required=False, action='store_true')
 
-parser.add_argument('--enable-js', help="Enable JavaScript comment parsing (BETA) (default False)", required=False, action='store_true')
+parser.add_argument('--disable-js', help="Disable JavaScript comment parsing (BETA) (default False)", required=False, action='store_true')
 
 parser.add_argument('--ssl', help="Verify SSL (default False)", required=False, action='store_true')
 parser.add_argument('-r', '--redirect', help="Follow redirects (default: False)", required=False, action='store_true')
